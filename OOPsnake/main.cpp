@@ -8,6 +8,7 @@
 #define HEIGHT 20
 #include <stdlib.h> // нужен для вызова функций rand(), srand()
 #include <time.h> // нужен для вызова функции time()
+#include <windows.h>
 class Map {
 private:
     char map[WIDTH][HEIGHT];
@@ -35,7 +36,7 @@ public:
     }
 
     void show_map() {
-        system("cls");
+        std::cout << "\33[2J\33[H";
       /*  std::cout << ' ';
         for (int i = 0; i < WIDTH; i++)
             std::cout << '_';
@@ -180,7 +181,14 @@ public:
 
     }
 };
-
+void hidecursor()
+{
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(consoleHandle, &info);
+}
 int main()
 {
     Snake snake;
@@ -188,6 +196,7 @@ int main()
     char ch,prev_ch;
     ch = 'g';
     bool state = true;
+    hidecursor();
     do {
         prev_ch = ch;
         ch = _getch();
@@ -213,7 +222,7 @@ int main()
             break;
         map.show_map();
     } while (ch != '.');
-    system("cls");
+    std::cout << "\33[2J\33[H";
     std::cout << "you loose ";
     return 0;
 }

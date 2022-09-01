@@ -1,11 +1,8 @@
-﻿// OOPsnake.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-
-#include <iostream>
+﻿#include <iostream>
 #include <queue>
 #include <conio.h>
-#define WIDTH 20
-#define HEIGHT 20
+#define WIDTH 22
+#define HEIGHT 22
 #include <stdlib.h> // нужен для вызова функций rand(), srand()
 #include <time.h> // нужен для вызова функции time()
 #include <windows.h>
@@ -16,41 +13,43 @@ private:
     int y_bounty;
 public:
     Map(int x, int y) {
-        for (int i = 0; i < WIDTH; i++)
-            for (int j = 0; j < HEIGHT; j++)
+        for (int i = 1; i < WIDTH-1; i++)
+            for (int j = 1; j < HEIGHT-1; j++)
                 map[i][j] = ' ';
+        for (int i = 0; i < WIDTH ; i++)
+            for (int j = 0; j < HEIGHT ; j++)
+                if (map[i][j] != ' ')
+                    map[i][j] = 'X';
         x_bounty = 0;
         y_bounty = 0;
         map[x][y] = '@';
         create_bounty();
         show_map();
     }
-   
-    void create_bounty() {    
-            srand((unsigned int)time(NULL));
-            while (x_bounty >= WIDTH || x_bounty <= 0 || y_bounty >= WIDTH || y_bounty <= 0 || map[x_bounty][y_bounty] == '@') {
-                x_bounty = rand() % WIDTH + 1;
-                y_bounty = rand() % HEIGHT + 1;
-            }
-            map[x_bounty][y_bounty] = 'B';
+
+    void create_bounty() {
+        srand((unsigned int)time(NULL));
+        while (x_bounty > WIDTH  || x_bounty < 1 || y_bounty > HEIGHT - 1|| y_bounty < 1 || map[x_bounty][y_bounty] == '@' || map[x_bounty][y_bounty] == 'X') {
+            x_bounty = rand() % (WIDTH - 1) + 1;
+            y_bounty = rand() % (HEIGHT - 1) + 1;
+        }
+        map[x_bounty][y_bounty] = 'B';
     }
 
     void show_map() {
         std::cout << "\33[2J\33[H";
-      /*  std::cout << ' ';
-        for (int i = 0; i < WIDTH; i++)
-            std::cout << '_';
-        std::cout << '\n';*/
         for (int i = 0; i < WIDTH; i++)
         {
-            /*std::cout << '|';*/
+            
             for (int j = 0; j < HEIGHT; j++)
                 std::cout << map[j][i];
-            std::cout  << '\n';
+            std::cout << '\n';
 
         }
-      
-       
+        std::cout << ' ';
+        
+            
+
     }
     bool checkBounty(int x, int y) {
         return x == x_bounty && y == y_bounty;
@@ -62,7 +61,7 @@ public:
     {
         return map[x][y];
     }
-    
+
 };
 class Snake {
 private:
@@ -70,6 +69,7 @@ private:
     std::queue <int> y_loc;
     int score;
     int size;
+    int speed;
 
 public:
     Snake() {
@@ -77,6 +77,7 @@ public:
         y_loc.push(15);
         size = 0;
         score = -1;
+        speed = 200;
     }
     int returnFirstX() {
         return x_loc.front();
@@ -88,18 +89,19 @@ public:
     bool moveRight(Map& map) {
         x_loc.push(x_loc.back() + 1);
         y_loc.push(y_loc.back());
-        if (map.checkBounty(x_loc.back() , y_loc.back()))
+        if (map.checkBounty(x_loc.back(), y_loc.back()))
         {
             score++;
-           
+            speed -= 20;
+
             map.set_coord(x_loc.back(), y_loc.back(), '@');
-            map.set_coord(x_loc.back() - 1 , y_loc.back(), '@');
+            map.set_coord(x_loc.back() - 1, y_loc.back(), '@');
             map.create_bounty();
         }
-        else if (map.returnSymbolAt(x_loc.back(),y_loc.back()) == '@'   && x_loc.front()!= x_loc.back() && y_loc.front() != y_loc.back()) {
-            return false;
+        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@'|| map.returnSymbolAt(x_loc.back(), y_loc.back()) == 'X'){
+           return false;
         }
-        
+
         else
         {
             map.set_coord(x_loc.front(), y_loc.front(), ' ');
@@ -109,18 +111,21 @@ public:
         }
         return true;
     }
+    int returnSpeed() {
+        return speed;
+    }
     bool moveLeft(Map& map) {
-        x_loc.push(x_loc.back() -1 );
+        x_loc.push(x_loc.back() - 1);
         y_loc.push(y_loc.back());
         if (map.checkBounty(x_loc.back(), y_loc.back()))
         {
             score++;
-            
+            speed -= 20;
             map.set_coord(x_loc.back(), y_loc.back(), '@');
-            map.set_coord(x_loc.back() + 1, y_loc.back() , '@');
+            map.set_coord(x_loc.back() + 1, y_loc.back(), '@');
             map.create_bounty();
         }
-        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@' && x_loc.front() != x_loc.back() && y_loc.front() != y_loc.back()) {
+        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@' || map.returnSymbolAt(x_loc.back(), y_loc.back()) == 'X') {
             return false;
         }
         else
@@ -138,13 +143,13 @@ public:
         if (map.checkBounty(x_loc.back(), y_loc.back()))
         {
             score++;
-            
-            map.set_coord(x_loc.back(), y_loc.back() , '@');
+            speed -= 20;
+            map.set_coord(x_loc.back(), y_loc.back(), '@');
             map.set_coord(x_loc.back(), y_loc.back() + 1, '@');
             map.create_bounty();
-            
+
         }
-        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@' && x_loc.front() != x_loc.back() && y_loc.front() != y_loc.back()) {
+        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@' || map.returnSymbolAt(x_loc.back(), y_loc.back()) == 'X') {
             return false;
         }
         else
@@ -161,13 +166,13 @@ public:
         y_loc.push(y_loc.back() + 1);
         if (map.checkBounty(x_loc.back(), y_loc.back()))
         {
-            
+            speed -= 20;
             score++;
             map.set_coord(x_loc.back(), y_loc.back(), '@');
             map.set_coord(x_loc.back(), y_loc.back() - 1, '@');
             map.create_bounty();
         }
-        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@' && x_loc.front() != x_loc.back() && y_loc.front() != y_loc.back()) {
+        else if (map.returnSymbolAt(x_loc.back(), y_loc.back()) == '@' || map.returnSymbolAt(x_loc.back(), y_loc.back()) == 'X') {
             return false;
         }
         else
@@ -181,39 +186,35 @@ public:
 
     }
 };
-void hidecursor()
-{
-    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO info;
-    info.dwSize = 100;
-    info.bVisible = FALSE;
-    SetConsoleCursorInfo(consoleHandle, &info);
-}
+
 int main()
 {
     Snake snake;
-    Map map(snake.returnFirstX(),snake.returnFirstY());
-    char ch,prev_ch;
+    Map map(snake.returnFirstX(), snake.returnFirstY());
+    char ch, prev_ch;
     ch = 'g';
+   
     bool state = true;
-    hidecursor();
     do {
         prev_ch = ch;
-        ch = _getch();
-        if (prev_ch == 'a' && ch == 'd' || prev_ch == 'd' && ch == 'a' || prev_ch == 'w' && ch == 's' || prev_ch == 's' && ch == 'w' )
+       
+        if (prev_ch == 'a' && ch == 'd' || prev_ch == 'd' && ch == 'a' || prev_ch == 'w' && ch == 's' || prev_ch == 's' && ch == 'w')
             continue;
-        switch (ch) {
+        if(_kbhit()!=0)
+            ch = _getch();
+        Sleep(snake.returnSpeed());
+        switch (prev_ch) {
         case 'w':
             state = snake.moveUp(map);
             break;
         case 's':
-            state =  snake.moveDown(map);
+            state = snake.moveDown(map);
             break;
         case 'a':
-            state =  snake.moveLeft(map);
+            state = snake.moveLeft(map);
             break;
         case 'd':
-            state =  snake.moveRight(map);
+            state = snake.moveRight(map);
             break;
         default:
             break;
@@ -221,19 +222,8 @@ int main()
         if (!state)
             break;
         map.show_map();
-    } while (ch != '.');
+    } while (true);
     std::cout << "\33[2J\33[H";
     std::cout << "you loose ";
     return 0;
 }
-
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
